@@ -1,0 +1,22 @@
+- name: Set shell to zsh
+  user: name=kn shell=/usr/local/bin/zsh
+
+- name: Install oh-my-zsh
+  become: no
+  git: repo=https://github.com/robbyrussell/oh-my-zsh.git dest="~/.oh-my-zsh"
+
+- name: Checkout dotfiles
+  become: no
+  git: repo=https://github.com/KimNorgaard/dotfiles.git dest="~/.dotfiles"
+  register: result
+
+- name: Run install.sh
+  become: no
+  shell: "~/.dotfiles/install.sh"
+  when: result|changed
+
+# TODO:
+# bin/
+# pws (program, fil)
+# irssi config
+# backup dir + permissions (group write)

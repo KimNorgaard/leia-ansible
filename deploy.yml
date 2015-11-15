@@ -1,0 +1,91 @@
+- hosts: all
+  become: yes
+  gather_facts: no
+
+  vars:
+    nginx_conf_dir: /usr/local/etc/nginx
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
+    - name: reload nginx
+      service: name=nginx state=reloaded
+
+  tasks:
+    - name: Enable nginx
+      service: name=nginx enabled=yes state=started
+
+    - name: Update nginx.conf
+      template: src=templates/nginx.conf.j2 dest={{ nginx_conf_dir }}/nginx.conf
+      notify: restart nginx
+
+    - name: Create sites-enabled, sites-available and conf.d
+      file: path={{ nginx_conf_dir }}/{{ item }} state=directory
+      with_items:
+        - "sites-enabled"
+        - "sites-available"
+        - conf.d
+
+    - name: Create the configurations for sites
+      template: src=templates/nginx_site.conf.j2 dest={{nginx_conf_dir}}/sites-available/{{ item }}.conf
+      with_items: nginx_sites.keys()
+      notify:
+       - restart nginx
+
+    - name: Create links for sites-enabled
+      file: state=link src={{nginx_conf_dir}}/sites-available/{{ item }}.conf dest={{nginx_conf_dir}}/sites-enabled/{{ item }}.conf
+      with_items: nginx_sites.keys()
+      notify:
+       - reload nginx
+
+    - name: Create the configurations for independent config file
+      template: src=templates/nginx_config.conf.j2 dest={{nginx_conf_dir}}/conf.d/{{ item }}.conf
+      with_items: nginx_configs.keys()
+      notify:
+       - reload nginx
+
+    - name: Find enabled sites
+      shell: ls -1 {{nginx_conf_dir}}/sites-enabled
+      register: enabled_sites
+      changed_when: False
+
+    - name: Disable unmanaged sites
+      file: path={{nginx_conf_dir}}/sites-enabled/{{ item }} state=absent
+      with_items: enabled_sites.stdout_lines
+      # 'item.conf' => 'item'
+      when: item[:-5] not in nginx_sites.keys()
+      notify:
+       - reload nginx
+
+    - name: Find config files
+      shell: ls -1 {{nginx_conf_dir}}/conf.d
+      register: config_files
+      changed_when: False
+
+    - name: Remove unmanaged config files
+      file: name={{nginx_conf_dir}}/conf.d/{{ item }} state=absent
+      with_items: config_files.stdout_lines
+      # 'item.conf' => 'item'
+      when: item[:-5] not in nginx_configs.keys()
+      notify:
+       - reload nginx
+
+    - name: Remove unwanted sites
+      file: path={{nginx_conf_dir}}/{{ item[0] }}/{{ item[1] }}.conf state=absent
+      with_nested: 
+        - [ 'sites-enabled', 'sites-available']
+        - nginx_remove_sites
+      notify:
+       - reload nginx
+
+    - name: Remove unwanted conf
+      file: path={{nginx_conf_dir}}/conf.d/{{ item[1] }}.conf state=absent
+      with_items: nginx_remove_configs
+      notify:
+       - reload nginx
+
+    - name: Checkout site jasen.dk
+      git: repo=https://github.com/KimNorgaard/jasen.dk.git dest=/data/www/jasen.dk
+
+      # rei.dk
+      # jasen.dk/knips

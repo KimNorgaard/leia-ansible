@@ -1,0 +1,54 @@
+- name: Sysctl
+  sysctl: name={{ item.name }} value={{ item.value }} state=present reload=yes
+  with_items: sysctl_flags
+
+- name: rc.conf kern_securelevel_enable
+  lineinfile:
+    dest=/etc/rc.conf
+    regexp="^kern_securelevel_enable="
+    line="kern_securelevel_enable=\"YES\""
+    state=present
+
+- name: rc.conf kern_securelevel
+  lineinfile:
+    dest=/etc/rc.conf
+    regexp="^kern_securelevel="
+    line="kern_securelevel=\"2\""
+    state=present
+
+- name: rc.conf icmp_drop_redirect
+  lineinfile:
+    dest=/etc/rc.conf
+    regexp="^icmp_drop_redirect"
+    line="icmp_drop_redirect=\"YES\""
+    state=present
+
+- name: rc.conf icmp_log_redirect
+  lineinfile:
+    dest=/etc/rc.conf
+    regexp="^icmp_log_redirect"
+    line="icmp_log_redirect=\"YES\""
+    state=present
+
+- name: rc.conf pf_enable
+  lineinfile:
+    dest=/etc/rc.conf
+    regexp="^pf_enable="
+    line="pf_enable=\"YES\""
+    state=present
+
+- name: Create default pf files
+  copy: content="" dest=/etc/{{ item }} force=no owner=root group=wheel mode=0600
+  with_items:
+    - pf.ban
+  tags: pf
+
+- name: Create pf.conf
+  template: src=templates/pf.conf.j2 dest=/etc/pf.conf mode=0600 validate='pfctl -n -f %s'
+  notify: reload pf
+  tags: pf
+
+- name: Enable pf
+  service: name=pf enabled=yes
+  tags: pf
+

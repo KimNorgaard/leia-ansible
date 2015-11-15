@@ -1,0 +1,29 @@
+- hosts: all
+  #gather_facts: no
+  become: yes
+
+  vars_files:
+    - vault.yml
+
+  handlers:
+    - name: reload pf
+      service: name=pf state=reloaded enabled=yes
+
+  tasks:
+    - name: Setup data zpool
+      command: zpool create data da1
+               creates=/data
+
+    - name: Install packages
+      pkgng: name={{ item }} state=present
+      with_items:
+        - zsh
+        - git
+        - tmux
+        - security/lynis
+        - nginx-devel
+        - irssi-devel
+
+    - include: user.yml
+    - include: security.yml
+

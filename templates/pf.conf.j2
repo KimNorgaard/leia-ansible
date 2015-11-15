@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+
+ext_if="{{ ansible_default_ipv4.device }}"
+
+table <mgmt> { {% for ip in pf_mgmt %}{{ ip }} {% if loop.last == False %} , {% endif %}{% endfor %} }
+table <idiots> persist file "/etc/pf.ban"
+
+set block-policy return
+set loginterface $ext_if
+set skip on lo0
+
+scrub in all
+block in all
+
+pass in on $ext_if proto icmp all
+pass in on $ext_if proto icmp6 all
+
+# Outbound anything
+pass out quick inet proto { udp, icmp } from $ext_if to any keep state 
+pass out quick inet proto tcp 
+
+# Management networks rule all
+pass in on $ext_if from <mgmt> to any
+
+# SSH port 2200 from any
+pass in on $ext_if proto tcp from any to any port 2200
+
+# HTTP
+pass in on $ext_if proto tcp from any to any port 80
+
+# HTTPS
+pass in on $ext_if proto tcp from any to any port 443
+
+# Block idiots
+block in quick on $ext_if from <idiots> to any

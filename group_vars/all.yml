@@ -1,0 +1,37 @@
+ansible_python_interpreter: /usr/local/bin/python
+
+ssh_public_key: ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAzuPSR9yxYeX7tkWO3bLEodqioKMod1pCeoPFIiXmQfyVRjAnlx/vHOsYJTjqVJs68GrAl+7udMudjmw9CP3rPFo6aNZ+XraJMFfJTNWDTRN3dBDropbO9R9CSvciF/yRSegkCHRX5RxdyfA+94CwDY0bOf1mBXQTBqzejSmTcJWQHqdN8C7HOB6j0DKneLiug9Y/lhnjXLNuCJceO0icekJIrWYlRKEgdSPmOVBwqFZfNom3l+HaNs53SZWytXlac9fduOqu+7P1jAJ4oiN9iDzySDq/DpG4Y/ct+6fAZzuEbSRcfuuoIO4Iu9UfsmsHgiKwLoIoiHvSr+Mo+gSGPw== jasen@jasen.dk
+
+sysctl_flags:
+  - name: net.inet.tcp.blackhole
+    value: 2
+  - name: net.inet.udp.blackhole
+    value: 1
+  - name: net.inet.ip.redirect
+    value: 0
+  - name: net.inet6.ip6.redirect
+    value: 0
+  - name: net.inet6.icmp6.rediraccept
+    value: 0
+  - name: net.inet.ip.random_id
+    value: 1
+  - name: security.bsd.see_other_uids
+    value: 0
+  - name: security.bsd.see_other_gids
+    value: 0
+
+nginx_configs: {}
+nginx_remove_configs: []
+
+nginx_sites:
+  default:
+     - listen 80 default_server
+     - server_name _
+     - root "/data/www/jasen.dk"
+     - index index.html
+  rei:
+     - listen 80 default_server
+     - server_name rei.dk www.rei.dk
+     - root "/data/wwW/rei.dk"
+     - index index.html
+nginx_remove_sites: []

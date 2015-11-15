@@ -1,0 +1,57 @@
+- name: Initial setup
+  hosts: all
+  become: True
+  become_method: su
+  gather_facts: False
+
+  handlers:
+    - name: restart sshd
+      service: name=sshd state=restarted enabled=yes
+
+  tasks:
+    - name: Bootstrap pkg
+      raw: env ASSUME_ALWAYS_YES=YES pkg bootstrap
+
+    - name: Install python
+      raw:  pkg install -y python
+
+    - name: Install sudo
+      pkgng: name=sudo state=present
+
+    - name: Install pam_ssh_agent_auth
+      pkgng: name=security/pam_ssh_agent_auth state=present
+
+    - name: Install ca_root_nss
+      pkgng: name=ca_root_nss state=present
+
+    - name: Add ssh key
+      authorized_key: user={{ item }} key="{{ ssh_public_key }}"
+      with_items:
+        - kn
+        - root
+
+    - name: Allow wheel to sudo
+      lineinfile:
+        dest=/usr/local/etc/sudoers
+        line="%wheel ALL=(ALL) ALL"
+        regexp="^#? ?%wheel ALL=\(ALL\) ALL"
+        state=present
+        validate="/usr/local/sbin/visudo -cf %s"
+
+    - name: Configure SSH Agent for sudo (sudoers)
+      lineinfile:
+        dest=/usr/local/etc/sudoers.d/ssh_agent
+        line="Defaults env_keep += \"SSH_CLIENT SSH_CONNECTION SSH_TTY SSH_AUTH_SOCK\",timestamp_timeout=0"
+        state=present
+        validate="/usr/local/sbin/visudo -cf %s"
+
+    - name: Configure SSH Agent for sudo (pam)
+      copy:
+        src=files/pam.d/sudo
+        dest=/usr/local/etc/pam.d/sudo
+
+    - name: Update sshd_config
+      copy: src=files/sshd_config dest=/etc/ssh/sshd_config validate="/usr/sbin/sshd -T -f %s"
+      notify: restart sshd
+
+
