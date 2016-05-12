@@ -25,13 +25,17 @@ nginx_remove_configs: []
 
 nginx_sites:
   default:
-     - listen 80 default_server
-     - server_name _
-     - root "/data/www/jasen.dk"
-     - index index.html
+    - listen 80
+    - server_name _
+    - root "/data/www/jasen.dk"
+    - index index.html
+  blog:
+    - listen 80
+    - server_name "blog.jasen.dk"
+    - return 301 https://github.com/KimNorgaard/monolit
   rei:
-     - listen 80 default_server
+     - listen 80
      - server_name rei.dk www.rei.dk
-     - root "/data/wwW/rei.dk"
+     - root "/data/www/rei.dk"
      - index index.html
 nginx_remove_sites: []

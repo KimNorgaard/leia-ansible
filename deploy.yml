@@ -28,19 +28,19 @@
 
     - name: Create the configurations for sites
       template: src=templates/nginx_site.conf.j2 dest={{nginx_conf_dir}}/sites-available/{{ item }}.conf
-      with_items: nginx_sites.keys()
+      with_items: "{{ nginx_sites.keys() }}"
       notify:
        - restart nginx
 
     - name: Create links for sites-enabled
       file: state=link src={{nginx_conf_dir}}/sites-available/{{ item }}.conf dest={{nginx_conf_dir}}/sites-enabled/{{ item }}.conf
-      with_items: nginx_sites.keys()
+      with_items: "{{ nginx_sites.keys() }}"
       notify:
        - reload nginx
 
     - name: Create the configurations for independent config file
       template: src=templates/nginx_config.conf.j2 dest={{nginx_conf_dir}}/conf.d/{{ item }}.conf
-      with_items: nginx_configs.keys()
+      with_items: "{{ nginx_configs.keys() }}"
       notify:
        - reload nginx
 
@@ -51,7 +51,7 @@
 
     - name: Disable unmanaged sites
       file: path={{nginx_conf_dir}}/sites-enabled/{{ item }} state=absent
-      with_items: enabled_sites.stdout_lines
+      with_items: "{{ enabled_sites.stdout_lines }}"
       # 'item.conf' => 'item'
       when: item[:-5] not in nginx_sites.keys()
       notify:
@@ -64,7 +64,7 @@
 
     - name: Remove unmanaged config files
       file: name={{nginx_conf_dir}}/conf.d/{{ item }} state=absent
-      with_items: config_files.stdout_lines
+      with_items: "{{ config_files.stdout_lines }}"
       # 'item.conf' => 'item'
       when: item[:-5] not in nginx_configs.keys()
       notify:
@@ -74,13 +74,13 @@
       file: path={{nginx_conf_dir}}/{{ item[0] }}/{{ item[1] }}.conf state=absent
       with_nested: 
         - [ 'sites-enabled', 'sites-available']
-        - nginx_remove_sites
+        - "{{ nginx_remove_sites }}"
       notify:
        - reload nginx
 
     - name: Remove unwanted conf
       file: path={{nginx_conf_dir}}/conf.d/{{ item[1] }}.conf state=absent
-      with_items: nginx_remove_configs
+      with_items: "{{ nginx_remove_configs }}"
       notify:
        - reload nginx
 
