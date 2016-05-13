@@ -23,6 +23,7 @@
         - security/lynis
         - nginx-devel
         - irssi-devel
+        - password-store
 
     - include: user.yml
     - include: security.yml

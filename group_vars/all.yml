@@ -19,6 +19,8 @@ sysctl_flags:
     value: 0
   - name: security.bsd.see_other_gids
     value: 0
+  - name: vm.max_wired
+    value: 524288
 
 nginx_configs: {}
 nginx_remove_configs: []
