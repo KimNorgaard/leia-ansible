@@ -24,6 +24,8 @@
         - nginx-devel
         - irssi-devel
         - password-store
+        - openjdk12
+        - screen
 
     - include: user.yml
     - include: security.yml

@@ -25,6 +25,9 @@ pass in on $ext_if from <mgmt> to any
 # SSH port 2200 from any
 pass in on $ext_if proto tcp from any to any port 2200
 
+# Minecraft
+pass in on $ext_if proto tcp from any to any port 25565
+
 # HTTP
 pass in on $ext_if proto tcp from any to any port 80
 
